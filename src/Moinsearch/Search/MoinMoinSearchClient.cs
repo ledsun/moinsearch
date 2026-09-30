@@ -28,26 +28,26 @@ internal sealed class MoinMoinSearchClient(XmlRpcClient xmlRpcClient)
             token = await GetAuthTokenAsync(username, password, cancellationToken).ConfigureAwait(false);
             return await SearchWithTokenAsync(token, query, cancellationToken).ConfigureAwait(false);
         }
-
-        public async Task<string> GetPageAsync(
-            string username,
-            string password,
-            string pageName,
-            CancellationToken cancellationToken)
+        finally
         {
-            string? token = null;
-            try
+            if (!string.IsNullOrEmpty(token))
             {
-                token = await GetAuthTokenAsync(username, password, cancellationToken).ConfigureAwait(false);
-                return await GetPageWithTokenAsync(token, pageName, cancellationToken).ConfigureAwait(false);
+                await CleanupSessionAsync(token).ConfigureAwait(false);
             }
-            finally
-            {
-                if (!string.IsNullOrEmpty(token))
-                {
-                    await CleanupSessionAsync(token).ConfigureAwait(false);
-                }
-            }
+        }
+    }
+
+    public async Task<string> GetPageAsync(
+        string username,
+        string password,
+        string pageName,
+        CancellationToken cancellationToken)
+    {
+        string? token = null;
+        try
+        {
+            token = await GetAuthTokenAsync(username, password, cancellationToken).ConfigureAwait(false);
+            return await GetPageWithTokenAsync(token, pageName, cancellationToken).ConfigureAwait(false);
         }
         finally
         {

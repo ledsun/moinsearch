@@ -246,4 +246,34 @@ public class MoinMoinSearchClientTests
         Assert.Equal(3, handler.ReceivedRequestBodies.Count);
         Assert.Contains("deleteAuthToken", handler.ReceivedRequestBodies[2]);
     }
+
+    [Fact]
+    public async Task GetPageAsync_ReturnsRawWikiText_AndCleansUpToken()
+    {
+        const string rawPage = "'''議事録'''\\n * 項目";
+        var getPageResponse = $"""
+            <?xml version="1.0"?>
+            <methodResponse><params><param><value><string>{rawPage}</string></value></param></params></methodResponse>
+            """;
+        var multicall = $"""
+            <?xml version="1.0"?>
+            <methodResponse><params><param><value><array><data>
+              <value><array><data><value><string>SUCCESS</string></value></data></array></value>
+              <value><array><data><value><string>{rawPage}</string></value></data></array></value>
+            </data></array></value></param></params></methodResponse>
+            """;
+
+        var handler = FakeHttpMessageHandler.Sequential(
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, TokenResponse),
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, multicall),
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, DeleteTokenResponse));
+
+        var client = CreateClient(handler);
+        var page = await client.GetPageAsync("user", "pass", "議事録/2025", CancellationToken.None);
+
+        Assert.Equal(rawPage, page);
+        Assert.Contains("getPage", handler.ReceivedRequestBodies[1]);
+        Assert.Contains("議事録/2025", handler.ReceivedRequestBodies[1]);
+        Assert.Contains("deleteAuthToken", handler.ReceivedRequestBodies[2]);
+    }
 }
