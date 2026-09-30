@@ -14,6 +14,10 @@ moinsearch search "議事録"
 moinsearch get "https://wiki.example.com/議事録2025年度" > page.txt
 ```
 
+- `get` のURLは検索結果に含まれる、WikiのページURLを指定してください
+- `get` で取得するページはMoinMoin XML-RPCの `getPage` が返すWiki記法を含む原文です。HTMLや装飾の除去は行いません。
+
+
 ## exeの配置と起動方法
 
 1. `moinsearch.exe` を任意のフォルダ（例: `C:\Tools\moinsearch\`）に
@@ -42,9 +46,6 @@ password = "your-password"
 | `username` | WikiName |
 | `password` | パスワード。平文で保存されます。 |
 
-`get` のURLは検索結果に含まれる、設定済みWikiのページURLを指定してください。
-本文はMoinMoin XML-RPCの `getPage` が返すWiki記法を含む原文で、HTMLや装飾の除去は行いません。
-従来の `moinsearch <検索語>` 形式は廃止されています。
 
 3項目すべて必須です。
 
