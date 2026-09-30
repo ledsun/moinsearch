@@ -8,6 +8,9 @@ internal enum CommandMode
     /// <summary>検索を実行する。</summary>
     Search,
 
+    /// <summary>指定ページの本文を取得する。</summary>
+    Get,
+
     /// <summary>使い方を表示して正常終了する。</summary>
     Help,
 
@@ -21,11 +24,12 @@ internal enum CommandMode
 internal sealed record ParsedArguments(
     CommandMode Mode,
     string? SearchTerm = null,
+    string? PageUrl = null,
     string? ErrorMessage = null);
 
 /// <summary>
 /// moinsearch のコマンドライン引数を解析する。
-/// 対応する引数は検索語1つのみで、オプションは --help / -h だけ。
+/// 対応するコマンドは search / get で、オプションは --help / -h だけ。
 /// </summary>
 internal static class CommandLineParser
 {
@@ -38,30 +42,36 @@ internal static class CommandLineParser
 
         if (args.Length == 0)
         {
-            return new ParsedArguments(CommandMode.Error, ErrorMessage: "検索語を指定してください。");
+            return new ParsedArguments(CommandMode.Error, ErrorMessage: "コマンドと引数を指定してください。");
         }
 
-        string? searchTerm = null;
-        foreach (var arg in args)
+        if (args.Length != 2)
         {
-            if (arg.StartsWith('-'))
+            return new ParsedArguments(CommandMode.Error, ErrorMessage: "コマンドと引数を1つずつ指定してください。");
+        }
+
+        if (args[0] == "search")
+        {
+            if (string.IsNullOrWhiteSpace(args[1]))
             {
-                return new ParsedArguments(CommandMode.Error, ErrorMessage: $"不明なオプションです: {arg}");
+                return new ParsedArguments(CommandMode.Error, ErrorMessage: "検索語が空です。空白だけの検索語は指定できません。");
             }
 
-            if (searchTerm is not null)
+            return new ParsedArguments(CommandMode.Search, SearchTerm: args[1]);
+        }
+
+        if (args[0] == "get")
+        {
+            if (string.IsNullOrWhiteSpace(args[1]))
             {
-                return new ParsedArguments(CommandMode.Error, ErrorMessage: "引数が多すぎます。検索語は1つだけ指定してください。");
+                return new ParsedArguments(CommandMode.Error, ErrorMessage: "ページURLが空です。");
             }
 
-            searchTerm = arg;
+            return new ParsedArguments(CommandMode.Get, PageUrl: args[1]);
         }
 
-        if (string.IsNullOrWhiteSpace(searchTerm))
-        {
-            return new ParsedArguments(CommandMode.Error, ErrorMessage: "検索語が空です。空白だけの検索語は指定できません。");
-        }
-
-        return new ParsedArguments(CommandMode.Search, SearchTerm: searchTerm);
+        return new ParsedArguments(
+            CommandMode.Error,
+            ErrorMessage: "コマンドは search または get を指定してください。従来の moinsearch <検索語> 形式は廃止されました。");
     }
 }

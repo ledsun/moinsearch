@@ -6,9 +6,12 @@ MoinMoin Wiki (1.9.11) を認証付きで検索する、Windows x64向けのコ�
 
 ```powershell
 # 標準出力はTSV形式（ページ名<TAB>URL）
-moinsearch "議事録"
+moinsearch search "議事録"
 # => 議事録2024年度<TAB>https://wiki.example.com/議事録2024年度
 # => 議事録2025年度<TAB>https://wiki.example.com/議事録2025年度
+
+# ページ本文はWiki記法を含む原文だけを出力
+moinsearch get "https://wiki.example.com/議事録2025年度" > page.txt
 ```
 
 ## exeの配置と起動方法
@@ -18,7 +21,7 @@ moinsearch "議事録"
 2. PowerShell から実行する場合はフルパスまたは相対パスで起動します。
 
 ```powershell
-C:\Tools\moinsearch\moinsearch.exe "検索語"
+C:\Tools\moinsearch\moinsearch.exe search "検索語"
 ```
 
 ## 設定ファイル（`.moinsearch.toml`）
@@ -38,6 +41,10 @@ password = "your-password"
   URLは設定エラーになります。
 - `username` は WikiName
 - `password` はパスワード。パスワードは平文で保存されます。
+
+`get` のURLは検索結果に含まれる、設定済みWikiのページURLを指定してください。
+本文はMoinMoin XML-RPCの `getPage` が返すWiki記法を含む原文で、HTMLや装飾の除去は行いません。
+従来の `moinsearch <検索語>` 形式は廃止されています。
 
 3項目すべて必須です。
 
