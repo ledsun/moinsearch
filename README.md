@@ -50,9 +50,8 @@ password = "your-password"
 
 ## 対応環境
 
-- 対応OS: Windows x64。
-- 配布された `moinsearch.exe`（Native AOTでビルドしたシングルファイルexe）を使う
-  **利用者は .NET ランタイムを別途インストールする必要はありません**。
+- 対応OS: Windows x64
+- Native AOTでビルドしているため利用者は .NET ランタイムをインストールする必要はありません
 - 本リポジトリではビルド済みのexeやリリースは配布していません。exeが必要な場合は
   [開発者向け情報](CONTRIBUTING.md)に従って各自ビルドしてください。
 
