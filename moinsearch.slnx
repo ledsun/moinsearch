@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Moinsearch/Moinsearch.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Moinsearch.Tests/Moinsearch.Tests.csproj" />
+  </Folder>
+</Solution>
