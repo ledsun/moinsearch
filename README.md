@@ -6,7 +6,8 @@ MoinMoin Wiki (1.9.11) を認証付きで検索する、Windows x64向けのコ�
 
 - 対応OS: Windows x64
 - Native AOTでビルドしているため利用者は .NET ランタイムをインストールする必要はありません
-- 本リポジトリではビルド済みのexeやリリースは配布していません。exeが必要な場合は
+- ビルド済みexeは [GitHub Releases](https://github.com/ledsun/moinsearch/releases) からダウンロードできます
+  （privateリポジトリの場合、アクセスにはリポジトリへの権限が必要です）。リリースがない場合は
   [開発者向け情報](CONTRIBUTING.md)に従って各自ビルドしてください。
 
 ## 使用例

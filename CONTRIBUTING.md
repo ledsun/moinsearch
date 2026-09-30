@@ -33,6 +33,15 @@ Linuxからのクロスコンパイルはサポートされていません。
 生成された `moinsearch.exe` は
 `src/Moinsearch/bin/Release/net10.0/win-x64/publish/` 配下に出力されます。
 
+## GitHub Release
+
+`vMAJOR.MINOR.PATCH` 形式のタグを push すると、GitHub Actions が Windows runner でテストと Native AOT 発行を行い、`moinsearch-<tag>-win-x64.zip`（例: `moinsearch-v0.0.1-win-x64.zip`）を添付した GitHub Release を作成します。ZIPには `moinsearch.exe`、`README.md`、`LICENSE` が含まれます。exeの製品バージョンはタグから設定されます。
+
+```powershell
+git tag v0.0.1
+git push origin v0.0.1
+```
+
 ## 動作確認
 
 次のコマンドで `--help` が通信なしに表示されることを確認できます。
