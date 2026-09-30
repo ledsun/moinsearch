@@ -19,8 +19,7 @@ internal static class UsageText
           -h, --help    この使い方を表示して終了します（サーバーへの通信は行いません）
 
         設定:
-          接続先・認証情報は環境変数（MOINSEARCH_URL / MOINSEARCH_USERNAME /
-          MOINSEARCH_PASSWORD）または ~/.moinsearch.toml で指定します。
+          接続先・認証情報は ~/.moinsearch.toml で指定します。
           詳細は README.md を参照してください。
         """;
 }

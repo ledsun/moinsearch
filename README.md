@@ -63,8 +63,8 @@ password = "your-password"
   （Wiki側のアクセス制御や別の要因の可能性があります）。まずは `url` の設定と
   Wiki側の権限設定を確認してください。moinsearchは403だけを理由に認証失敗と
   断定しません。
-- **認証失敗（終了コード3）の場合**: `MOINSEARCH_USERNAME` /
-  `MOINSEARCH_PASSWORD`（または `.moinsearch.toml` の該当項目）を確認してください。
+- **認証失敗（終了コード3）の場合**: `.moinsearch.toml` の username /
+  password を確認してください。
 - **TLSエラーの場合**: moinsearchはTLS証明書検証を無効化しません。証明書が正しい
   ホスト名・信頼された認証局のものか、サーバー側の設定を確認してください。
 - **タイムアウトの場合**: 1リクエストあたり20秒で打ち切られます

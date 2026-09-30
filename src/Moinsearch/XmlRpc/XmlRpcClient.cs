@@ -32,7 +32,7 @@ internal sealed class XmlRpcClient(HttpClient httpClient, Uri endpoint)
             {
                 throw new CommunicationException(
                     $"サーバーがリダイレクト応答を返しました (HTTP {(int)response.StatusCode})。" +
-                    "接続先URLの設定 (MOINSEARCH_URL / .moinsearch.toml の url) を確認してください。");
+                    "接続先URLの設定 (.moinsearch.toml の url) を確認してください。");
             }
 
             if (!response.IsSuccessStatusCode)

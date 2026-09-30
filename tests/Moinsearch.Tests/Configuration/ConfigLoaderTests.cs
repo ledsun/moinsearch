@@ -6,27 +6,22 @@ public class ConfigLoaderTests
 {
     private const string ConfigPath = "/home/testuser/.moinsearch.toml";
 
-    private static ConfigLoader CreateLoader(
-        IReadOnlyDictionary<string, string> environment,
-        string? tomlContent)
+    private static ConfigLoader CreateLoader(string? tomlContent)
     {
-        return new ConfigLoader(
-            name => environment.TryGetValue(name, out var value) ? value : null,
-            () => tomlContent,
-            ConfigPath);
+        return new ConfigLoader(() => tomlContent, ConfigPath);
     }
 
     [Fact]
-    public void Load_AllFromEnvironmentVariables_Succeeds()
+    public void Load_AllFromToml_Succeeds()
     {
-        var env = new Dictionary<string, string>
-        {
-            ["MOINSEARCH_URL"] = "https://wiki.example.com/",
-            ["MOINSEARCH_USERNAME"] = "YourWikiName",
-            ["MOINSEARCH_PASSWORD"] = "your-password",
-        };
+        const string toml =
+            """
+            url = "https://wiki.example.com/"
+            username = "YourWikiName"
+            password = "your-password"
+            """;
 
-        var config = CreateLoader(env, tomlContent: null).Load();
+        var config = CreateLoader(toml).Load();
 
         Assert.Equal("https://wiki.example.com/", config.Url.AbsoluteUri);
         Assert.Equal("YourWikiName", config.Username);
@@ -35,12 +30,8 @@ public class ConfigLoaderTests
     }
 
     [Fact]
-    public void Load_EnvironmentVariableTakesPriorityOverToml()
+    public void Load_UsesTomlValues()
     {
-        var env = new Dictionary<string, string>
-        {
-            ["MOINSEARCH_USERNAME"] = "EnvUser",
-        };
         const string toml =
             """
             url = "https://wiki.example.com/"
@@ -48,80 +39,61 @@ public class ConfigLoaderTests
             password = "toml-password"
             """;
 
-        var config = CreateLoader(env, toml).Load();
+        var config = CreateLoader(toml).Load();
 
-        Assert.Equal("EnvUser", config.Username);
+        Assert.Equal("TomlUser", config.Username);
         Assert.Equal("toml-password", config.Password);
     }
 
     [Fact]
-    public void Load_EnvironmentVariableDefinedButEmpty_ThrowsConfigurationError()
+    public void Load_EmptyField_ThrowsConfigurationError()
     {
-        var env = new Dictionary<string, string>
-        {
-            ["MOINSEARCH_URL"] = "https://wiki.example.com/",
-            ["MOINSEARCH_USERNAME"] = "",
-            ["MOINSEARCH_PASSWORD"] = "secret",
-        };
+        const string toml =
+            """
+            url = "https://wiki.example.com/"
+            username = ""
+            password = "secret"
+            """;
 
-        var ex = Assert.Throws<ConfigurationException>(() => CreateLoader(env, null).Load());
-        Assert.Contains("MOINSEARCH_USERNAME", ex.Message);
+        var ex = Assert.Throws<ConfigurationException>(() => CreateLoader(toml).Load());
+        Assert.Contains("username", ex.Message);
     }
 
     [Fact]
     public void Load_MissingFieldEverywhere_ThrowsConfigurationError()
     {
-        var env = new Dictionary<string, string>
-        {
-            ["MOINSEARCH_URL"] = "https://wiki.example.com/",
-            ["MOINSEARCH_USERNAME"] = "user",
-        };
+        const string toml = "url = \"https://wiki.example.com/\"\nusername = \"user\"\n";
 
-        var ex = Assert.Throws<ConfigurationException>(() => CreateLoader(env, null).Load());
+        var ex = Assert.Throws<ConfigurationException>(() => CreateLoader(toml).Load());
         Assert.Contains("password", ex.Message);
     }
 
     [Fact]
-    public void Load_NoConfigFileButAllEnvironmentVariablesPresent_Succeeds()
+    public void Load_NoConfigFile_ThrowsConfigurationError()
     {
-        var env = new Dictionary<string, string>
-        {
-            ["MOINSEARCH_URL"] = "https://wiki.example.com/",
-            ["MOINSEARCH_USERNAME"] = "user",
-            ["MOINSEARCH_PASSWORD"] = "secret",
-        };
-
-        var config = CreateLoader(env, tomlContent: null).Load();
-
-        Assert.Equal("https://wiki.example.com/?action=xmlrpc2", config.XmlRpcEndpoint.AbsoluteUri);
+        Assert.Throws<ConfigurationException>(() => CreateLoader(tomlContent: null).Load());
     }
 
     [Fact]
     public void Load_InvalidToml_ThrowsConfigurationErrorWithoutLeakingValues()
     {
-        var env = new Dictionary<string, string>
-        {
-            ["MOINSEARCH_URL"] = "https://wiki.example.com/",
-            ["MOINSEARCH_USERNAME"] = "user",
-            ["MOINSEARCH_PASSWORD"] = "unrelated",
-        };
         const string invalidToml = "password = supersecretvalue123\n";
 
-        var ex = Assert.Throws<ConfigurationException>(() => CreateLoader(env, invalidToml).Load());
+        var ex = Assert.Throws<ConfigurationException>(() => CreateLoader(invalidToml).Load());
         Assert.DoesNotContain("supersecretvalue123", ex.Message);
     }
 
     [Fact]
     public void Load_PasswordIsNotTrimmed()
     {
-        var env = new Dictionary<string, string>
-        {
-            ["MOINSEARCH_URL"] = "https://wiki.example.com/",
-            ["MOINSEARCH_USERNAME"] = "user",
-            ["MOINSEARCH_PASSWORD"] = " secret with spaces ",
-        };
+        const string toml =
+            """
+            url = "https://wiki.example.com/"
+            username = "user"
+            password = " secret with spaces "
+            """;
 
-        var config = CreateLoader(env, null).Load();
+        var config = CreateLoader(toml).Load();
 
         Assert.Equal(" secret with spaces ", config.Password);
     }
@@ -159,14 +131,27 @@ public class ConfigLoaderTests
 
     private static void AssertInvalidUrl(string url)
     {
-        var env = new Dictionary<string, string>
-        {
-            ["MOINSEARCH_URL"] = url,
-            ["MOINSEARCH_USERNAME"] = "user",
-            ["MOINSEARCH_PASSWORD"] = "secret",
-        };
+        var toml = $"""
+            url = "{url}"
+            username = "user"
+            password = "secret"
+            """;
 
-        Assert.Throws<ConfigurationException>(() => CreateLoader(env, null).Load());
+        Assert.Throws<ConfigurationException>(() => CreateLoader(toml).Load());
     }
 
+    [Fact]
+    public void Load_SubdirectoryUrl_IsAccepted()
+    {
+        const string toml =
+            """
+            url = "https://example.com/wiki/mywiki/"
+            username = "user"
+            password = "secret"
+            """;
+
+        var config = CreateLoader(toml).Load();
+
+        Assert.Equal("https://example.com/wiki/mywiki/?action=xmlrpc2", config.XmlRpcEndpoint.AbsoluteUri);
+    }
 }
