@@ -224,7 +224,7 @@ internal sealed class MoinMoinSearchClient(XmlRpcClient xmlRpcClient)
         }
         catch (Exception ex) when (ex is CommunicationException or XmlRpcFaultException or OperationCanceledException)
         {
-            Console.Error.WriteLine("警告: 認証セッションの破棄に失敗しました（検索結果には影響ありません）。");
+            Console.Error.WriteLine("警告: 認証セッションの破棄に失敗しました（処理結果には影響ありません）。");
         }
     }
 }
