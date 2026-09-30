@@ -36,11 +36,11 @@ username = "YourWikiName"
 password = "your-password"
 ```
 
-- `url` は Wiki のベースURL（HTTPS必須）です。
-  - ユーザー名・パスワードの埋め込み、クエリ文字列、フラグメント (`#...`) を含む
-  URLは設定エラーになります。
-- `username` は WikiName
-- `password` はパスワード。パスワードは平文で保存されます。
+| 項目 | 説明 |
+| --- | --- |
+| `url` | Wiki のベースURL（HTTPS必須）。ユーザー名・パスワードの埋め込み、クエリ文字列、フラグメント (`#...`) を含むURLは設定エラーになります。 |
+| `username` | WikiName |
+| `password` | パスワード。平文で保存されます。 |
 
 `get` のURLは検索結果に含まれる、設定済みWikiのページURLを指定してください。
 本文はMoinMoin XML-RPCの `getPage` が返すWiki記法を含む原文で、HTMLや装飾の除去は行いません。
