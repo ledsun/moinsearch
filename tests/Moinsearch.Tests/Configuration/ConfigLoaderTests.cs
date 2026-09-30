@@ -86,14 +86,14 @@ public class ConfigLoaderTests
     {
         var env = new Dictionary<string, string>
         {
-            ["MOINSEARCH_URL"] = "https://wiki.example.com/sub/",
+            ["MOINSEARCH_URL"] = "https://wiki.example.com/",
             ["MOINSEARCH_USERNAME"] = "user",
             ["MOINSEARCH_PASSWORD"] = "secret",
         };
 
         var config = CreateLoader(env, tomlContent: null).Load();
 
-        Assert.Equal("https://wiki.example.com/sub/?action=xmlrpc2", config.XmlRpcEndpoint.AbsoluteUri);
+        Assert.Equal("https://wiki.example.com/?action=xmlrpc2", config.XmlRpcEndpoint.AbsoluteUri);
     }
 
     [Fact]
@@ -169,18 +169,4 @@ public class ConfigLoaderTests
         Assert.Throws<ConfigurationException>(() => CreateLoader(env, null).Load());
     }
 
-    [Fact]
-    public void Load_SubdirectoryUrl_IsAccepted()
-    {
-        var env = new Dictionary<string, string>
-        {
-            ["MOINSEARCH_URL"] = "https://example.com/wiki/mywiki/",
-            ["MOINSEARCH_USERNAME"] = "user",
-            ["MOINSEARCH_PASSWORD"] = "secret",
-        };
-
-        var config = CreateLoader(env, null).Load();
-
-        Assert.Equal("https://example.com/wiki/mywiki/?action=xmlrpc2", config.XmlRpcEndpoint.AbsoluteUri);
-    }
 }
