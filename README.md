@@ -71,36 +71,7 @@ password = "your-password"
 - `username` は WikiName、`password` はそのままのパスワードです（自動でTrimしません）。
 - 3項目すべて必須です。
 
-## 5. 環境変数と優先順位
-
-環境変数でも同じ3項目を指定できます。
-
-| 項目 | 環境変数 |
-| --- | --- |
-| url | `MOINSEARCH_URL` |
-| username | `MOINSEARCH_USERNAME` |
-| password | `MOINSEARCH_PASSWORD` |
-
-PowerShellでの設定例（現在のセッションのみ有効）:
-
-```powershell
-$env:MOINSEARCH_URL = "https://wiki.example.com/"
-$env:MOINSEARCH_USERNAME = "YourWikiName"
-$env:MOINSEARCH_PASSWORD = "your-password"
-```
-
-優先順位:
-
-- 項目ごとに、環境変数が**定義されていれば**その値を優先します。
-- 環境変数が**未定義**の場合のみ `.moinsearch.toml` の値にフォールバックします。
-- 環境変数が**定義済みで空文字列**の場合は、設定ファイルにフォールバックせず
-  設定エラーになります。
-- `.moinsearch.toml` が存在しなくても、3項目すべてが環境変数で揃っていれば
-  動作します。
-- `.moinsearch.toml` が存在するのにTOMLとして不正な場合は、値の内容を出力に
-  含めずに設定エラーとして扱います。
-
-## 6. 使用例
+## 5. 使用例
 
 ```powershell
 # 空白を含まない検索語
@@ -121,7 +92,7 @@ moinsearch "議事録" > result.tsv
 moinsearch "存在しないはずのキーワードxyz123"
 ```
 
-## 7. 設定ファイルの取り扱いに関する注意
+## 6. 設定ファイルの取り扱いに関する注意
 
 `.moinsearch.toml` にはパスワードが平文で保存されます。次の点に注意してください。
 
@@ -135,7 +106,7 @@ moinsearch "存在しないはずのキーワードxyz123"
 - **Gitなどのバージョン管理には絶対に登録しないでください。** リポジトリ直下で
   作業する場合は `.gitignore` に `.moinsearch.toml` を追加することを推奨します。
 
-## 8. 開発の前提条件
+## 7. 開発の前提条件
 
 - .NET SDK: `global.json` で固定しているバージョン（本リポジトリでは
   `10.0.401`、.NET 10 / C# 14 系のGA版。Preview・RC版は使用していません）。
@@ -144,7 +115,7 @@ moinsearch "存在しないはずのキーワードxyz123"
   MSVC ツールチェーンとWindows SDK）が必要です。
   ([参考: .NET Native AOTの前提条件](https://learn.microsoft.com/dotnet/core/deploying/native-aot/))
 
-## 9. ビルド・テスト・発行コマンド
+## 8. ビルド・テスト・発行コマンド
 
 restore / build / test は Windows・Linux・macOS のどこでも実行できます。
 
@@ -169,7 +140,7 @@ dotnet publish src/Moinsearch -c Release -r win-x64 --self-contained -p:PublishA
 .\moinsearch.exe --help
 ```
 
-## 10. 終了コード・トラブルシューティング
+## 9. 終了コード・トラブルシューティング
 
 | 終了コード | 意味 |
 | --- | --- |
@@ -183,15 +154,15 @@ dotnet publish src/Moinsearch -c Release -r win-x64 --self-contained -p:PublishA
   （Wiki側のアクセス制御や別の要因の可能性があります）。まずは `url` の設定と
   Wiki側の権限設定を確認してください。moinsearchは403だけを理由に認証失敗と
   断定しません。
-- **認証失敗（終了コード3）の場合**: `MOINSEARCH_USERNAME` /
-  `MOINSEARCH_PASSWORD`（または `.moinsearch.toml` の該当項目）を確認してください。
+- **認証失敗（終了コード3）の場合**: `.moinsearch.toml` の username /
+  password を確認してください。
 - **TLSエラーの場合**: moinsearchはTLS証明書検証を無効化しません。証明書が正しい
   ホスト名・信頼された認証局のものか、サーバー側の設定を確認してください。
 - **タイムアウトの場合**: 1リクエストあたり20秒で打ち切られます
   （終了コード1）。ネットワーク経路やサーバーの応答性を確認してください。
   自動リトライは行いません。
 
-## 11. XML-RPCと権限について
+## 10. XML-RPCと権限について
 
 moinsearchの動作には対象WikiでXML-RPC (`?action=xmlrpc2`) が有効になっている
 ことが必要です。検索結果は指定したWikiNameの閲覧権限に従うため、権限のない

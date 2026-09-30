@@ -4,7 +4,7 @@ using Tomlyn.Serialization;
 namespace Moinsearch.Configuration;
 
 /// <summary>
-/// ~/.moinsearch.toml の未検証な生モデル。3項目とも省略可能（省略時は環境変数で補う）。
+/// ~/.moinsearch.toml の未検証な生モデル。
 /// </summary>
 internal sealed class TomlConfigModel
 {
