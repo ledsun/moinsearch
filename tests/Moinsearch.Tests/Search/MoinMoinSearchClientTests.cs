@@ -224,4 +224,26 @@ public class MoinMoinSearchClientTests
         Assert.Equal(3, handler.ReceivedRequestBodies.Count);
         Assert.Contains("deleteAuthToken", handler.ReceivedRequestBodies[2]);
     }
+
+    [Fact]
+    public async Task SearchAsync_CallerCancellation_PropagatesAndStillAttemptsSessionCleanup()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var handler = FakeHttpMessageHandler.Sequential(
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, TokenResponse),
+            _ =>
+            {
+                cancellation.Cancel();
+                throw new OperationCanceledException(cancellation.Token);
+            },
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, DeleteTokenResponse));
+
+        var client = CreateClient(handler);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => client.SearchAsync("user", "pass", "query", cancellation.Token));
+
+        Assert.Equal(3, handler.ReceivedRequestBodies.Count);
+        Assert.Contains("deleteAuthToken", handler.ReceivedRequestBodies[2]);
+    }
 }

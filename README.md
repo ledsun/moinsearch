@@ -43,10 +43,12 @@ CLI です。
    ```powershell
    $env:Path += ";C:\Tools\moinsearch"
    # 永続化する場合（現在のユーザーのみ）
-   [Environment]::SetEnvironmentVariable(
-       "Path",
-       $env:Path + ";C:\Tools\moinsearch",
-       "User")
+   $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+   $toolPath = "C:\Tools\moinsearch"
+   if (($userPath -split ';') -notcontains $toolPath) {
+       $newUserPath = if ([string]::IsNullOrEmpty($userPath)) { $toolPath } else { "$userPath;$toolPath" }
+       [Environment]::SetEnvironmentVariable("Path", $newUserPath, "User")
+   }
    ```
 
 ## 4. 設定ファイル（`.moinsearch.toml`）
