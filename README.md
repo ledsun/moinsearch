@@ -34,7 +34,6 @@ password = "your-password"
 ```
 
 - `url` は Wiki のベースURL（HTTPS必須）です。
-  - サブディレクトリ配置（例: `https://example.com/wiki/mywiki/`）にも対応しています。
   - ユーザー名・パスワードの埋め込み、クエリ文字列、フラグメント (`#...`) を含む
   URLは設定エラーになります。
 - `username` は WikiName
