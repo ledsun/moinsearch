@@ -66,6 +66,23 @@ public class MoinMoinSearchClientTests
             """;
     }
 
+    private static string BuildGetPageMulticallResponse(bool authSuccess, bool pageFault, string pageText = "page content")
+    {
+        var authEntry = authSuccess
+            ? "<value><array><data><value><string>SUCCESS</string></value></data></array></value>"
+            : "<value><struct><member><name>faultCode</name><value><int>2</int></value></member>" +
+              "<member><name>faultString</name><value><string>bad token</string></value></member></struct></value>";
+        var pageEntry = pageFault
+            ? "<value><struct><member><name>faultCode</name><value><int>3</int></value></member>" +
+              "<member><name>faultString</name><value><string>page failed</string></value></member></struct></value>"
+            : $"<value><array><data><value><string>{pageText}</string></value></data></array></value>";
+
+        return $"""
+            <?xml version="1.0"?>
+            <methodResponse><params><param><value><array><data>{authEntry}{pageEntry}</data></array></value></param></params></methodResponse>
+            """;
+    }
+
     private static MoinMoinSearchClient CreateClient(FakeHttpMessageHandler handler)
     {
         var httpClient = new HttpClient(handler);
@@ -245,5 +262,117 @@ public class MoinMoinSearchClientTests
 
         Assert.Equal(3, handler.ReceivedRequestBodies.Count);
         Assert.Contains("deleteAuthToken", handler.ReceivedRequestBodies[2]);
+    }
+
+    [Fact]
+    public async Task GetPageAsync_ReturnsRawWikiText_AndCleansUpToken()
+    {
+        const string rawPage = "'''議事録'''\\n * 項目";
+        var getPageResponse = $"""
+            <?xml version="1.0"?>
+            <methodResponse><params><param><value><string>{rawPage}</string></value></param></params></methodResponse>
+            """;
+        var multicall = $"""
+            <?xml version="1.0"?>
+            <methodResponse><params><param><value><array><data>
+              <value><array><data><value><string>SUCCESS</string></value></data></array></value>
+              <value><array><data><value><string>{rawPage}</string></value></data></array></value>
+            </data></array></value></param></params></methodResponse>
+            """;
+
+        var handler = FakeHttpMessageHandler.Sequential(
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, TokenResponse),
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, multicall),
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, DeleteTokenResponse));
+
+        var client = CreateClient(handler);
+        var page = await client.GetPageAsync("user", "pass", "議事録/2025", CancellationToken.None);
+
+        Assert.Equal(rawPage, page);
+        Assert.Contains("getPage", handler.ReceivedRequestBodies[1]);
+        Assert.Contains("議事録/2025", handler.ReceivedRequestBodies[1]);
+        Assert.Contains("deleteAuthToken", handler.ReceivedRequestBodies[2]);
+    }
+
+    [Fact]
+    public async Task GetPageAsync_MulticallAuthFault_ThrowsAuthenticationFailedException_AndCleansUpToken()
+    {
+        var handler = FakeHttpMessageHandler.Sequential(
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, TokenResponse),
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, BuildGetPageMulticallResponse(authSuccess: false, pageFault: false)),
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, DeleteTokenResponse));
+
+        var client = CreateClient(handler);
+
+        await Assert.ThrowsAsync<AuthenticationFailedException>(
+            () => client.GetPageAsync("user", "pass", "Page", CancellationToken.None));
+
+        Assert.Equal(3, handler.ReceivedRequestBodies.Count);
+        Assert.Contains("deleteAuthToken", handler.ReceivedRequestBodies[2]);
+    }
+
+    [Fact]
+    public async Task GetPageAsync_PageFault_ThrowsCommunicationException_AndCleansUpToken()
+    {
+        var handler = FakeHttpMessageHandler.Sequential(
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, TokenResponse),
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, BuildGetPageMulticallResponse(authSuccess: true, pageFault: true)),
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, DeleteTokenResponse));
+
+        var client = CreateClient(handler);
+
+        await Assert.ThrowsAsync<CommunicationException>(
+            () => client.GetPageAsync("user", "pass", "Page", CancellationToken.None));
+
+        Assert.Equal(3, handler.ReceivedRequestBodies.Count);
+        Assert.Contains("deleteAuthToken", handler.ReceivedRequestBodies[2]);
+    }
+
+    [Fact]
+    public async Task GetPageAsync_CallerCancellation_PropagatesAndStillAttemptsSessionCleanup()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var handler = FakeHttpMessageHandler.Sequential(
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, TokenResponse),
+            _ =>
+            {
+                cancellation.Cancel();
+                throw new OperationCanceledException(cancellation.Token);
+            },
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, DeleteTokenResponse));
+
+        var client = CreateClient(handler);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => client.GetPageAsync("user", "pass", "Page", cancellation.Token));
+
+        Assert.Equal(3, handler.ReceivedRequestBodies.Count);
+        Assert.Contains("deleteAuthToken", handler.ReceivedRequestBodies[2]);
+    }
+
+    [Fact]
+    public async Task GetPageAsync_DeleteAuthTokenFails_StillReturnsPage_AndWritesOperationNeutralWarning()
+    {
+        var handler = FakeHttpMessageHandler.Sequential(
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, TokenResponse),
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, BuildGetPageMulticallResponse(authSuccess: true, pageFault: false)),
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.InternalServerError, "boom"));
+
+        var client = CreateClient(handler);
+        var originalError = Console.Error;
+        var stderr = new StringWriter();
+        Console.SetError(stderr);
+        try
+        {
+            var page = await client.GetPageAsync("user", "pass", "Page", CancellationToken.None);
+            Assert.Equal("page content", page);
+        }
+        finally
+        {
+            Console.SetError(originalError);
+        }
+
+        Assert.Contains("処理結果には影響ありません", stderr.ToString());
+        Assert.DoesNotContain("検索結果", stderr.ToString());
     }
 }

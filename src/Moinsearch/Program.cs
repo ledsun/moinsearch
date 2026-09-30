@@ -50,11 +50,27 @@ try
     var xmlRpcClient = new XmlRpcClient(httpClient, config.XmlRpcEndpoint);
     var searchClient = new MoinMoinSearchClient(xmlRpcClient);
 
-    var results = await searchClient
-        .SearchAsync(config.Username, config.Password, parsedArguments.SearchTerm!, userCancellation.Token)
-        .ConfigureAwait(false);
+    if (parsedArguments.Mode == CommandMode.Search)
+    {
+        var results = await searchClient
+            .SearchAsync(config.Username, config.Password, parsedArguments.SearchTerm!, userCancellation.Token)
+            .ConfigureAwait(false);
+        ResultWriter.Write(Console.Out, results);
+    }
+    else
+    {
+        if (!WikiPageUrl.TryGetPageName(config.Url, parsedArguments.PageUrl!, out var pageName))
+        {
+            Console.Error.WriteLine("指定されたURLは設定済みWikiのページURLではありません。");
+            return ExitCode.UsageOrConfigurationError;
+        }
 
-    ResultWriter.Write(Console.Out, results);
+        var page = await searchClient
+            .GetPageAsync(config.Username, config.Password, pageName, userCancellation.Token)
+            .ConfigureAwait(false);
+        Console.Write(page);
+    }
+
     return ExitCode.Success;
 }
 catch (OperationCanceledException) when (userCancellation.IsCancellationRequested)

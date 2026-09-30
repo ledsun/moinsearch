@@ -37,6 +37,27 @@ internal sealed class MoinMoinSearchClient(XmlRpcClient xmlRpcClient)
         }
     }
 
+    public async Task<string> GetPageAsync(
+        string username,
+        string password,
+        string pageName,
+        CancellationToken cancellationToken)
+    {
+        string? token = null;
+        try
+        {
+            token = await GetAuthTokenAsync(username, password, cancellationToken).ConfigureAwait(false);
+            return await GetPageWithTokenAsync(token, pageName, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            if (!string.IsNullOrEmpty(token))
+            {
+                await CleanupSessionAsync(token).ConfigureAwait(false);
+            }
+        }
+    }
+
     private async Task<string> GetAuthTokenAsync(string username, string password, CancellationToken cancellationToken)
     {
         XmlRpcValue result;
@@ -114,6 +135,48 @@ internal sealed class MoinMoinSearchClient(XmlRpcClient xmlRpcClient)
         return ParseSearchResults(searchOutcome.Value!);
     }
 
+    private async Task<string> GetPageWithTokenAsync(
+        string token,
+        string pageName,
+        CancellationToken cancellationToken)
+    {
+        var applyAuthCall = XmlRpcValue.Struct(new Dictionary<string, XmlRpcValue>
+        {
+            ["methodName"] = XmlRpcValue.String("applyAuthToken"),
+            ["params"] = XmlRpcValue.Array([XmlRpcValue.String(token)]),
+        });
+        var getPageCall = XmlRpcValue.Struct(new Dictionary<string, XmlRpcValue>
+        {
+            ["methodName"] = XmlRpcValue.String("getPage"),
+            ["params"] = XmlRpcValue.Array([XmlRpcValue.String(pageName)]),
+        });
+
+        var result = await xmlRpcClient.CallAsync(
+            "system.multicall",
+            [XmlRpcValue.Array([applyAuthCall, getPageCall])],
+            cancellationToken).ConfigureAwait(false);
+
+        var entries = result.AsArray();
+        if (entries.Count != 2)
+        {
+            throw new CommunicationException("system.multicall の応答件数が不正です。");
+        }
+
+        var authOutcome = InterpretMulticallEntry(entries[0]);
+        if (authOutcome.IsFault || authOutcome.Value!.AsString() != "SUCCESS")
+        {
+            throw new AuthenticationFailedException("認証セッションの確立に失敗しました。");
+        }
+
+        var pageOutcome = InterpretMulticallEntry(entries[1]);
+        if (pageOutcome.IsFault)
+        {
+            throw new CommunicationException("ページ本文の取得でサーバーがエラーを返しました。");
+        }
+
+        return pageOutcome.Value!.AsString();
+    }
+
     private static (bool IsFault, XmlRpcValue? Value) InterpretMulticallEntry(XmlRpcValue entry)
     {
         switch (entry)
@@ -161,7 +224,7 @@ internal sealed class MoinMoinSearchClient(XmlRpcClient xmlRpcClient)
         }
         catch (Exception ex) when (ex is CommunicationException or XmlRpcFaultException or OperationCanceledException)
         {
-            Console.Error.WriteLine("警告: 認証セッションの破棄に失敗しました（検索結果には影響ありません）。");
+            Console.Error.WriteLine("警告: 認証セッションの破棄に失敗しました（処理結果には影響ありません）。");
         }
     }
 }
