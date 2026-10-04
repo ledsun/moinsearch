@@ -24,6 +24,10 @@ moinsearch get "https://wiki.example.com/議事録2025年度" > page.txt
 
 引数には、検索結果に含まれるWikiのページURLを指定してください。
 
+## AIエージェント向けスキル
+
+検索結果からのページ選択や、取得したWiki本文の扱いなど、AIエージェント向けの手順は [`.github/skills/moinsearch/SKILL.md`](.github/skills/moinsearch/SKILL.md) を参照してください。CLIの使い方・設定は本READMEを参照します。
+
 ## 対応環境
 
 - 対応OS: Windows x64
