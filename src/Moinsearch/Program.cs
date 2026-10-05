@@ -22,6 +22,9 @@ switch (parsedArguments.Mode)
         Console.Error.WriteLine();
         Console.Error.WriteLine(UsageText.Text);
         return ExitCode.UsageOrConfigurationError;
+
+    case CommandMode.AuthSet:
+        return await RunAuthSetAsync().ConfigureAwait(false);
 }
 
 MoinsearchConfig config;
@@ -96,4 +99,83 @@ catch (XmlRpcFaultException)
 finally
 {
     Console.CancelKeyPress -= cancelHandler;
+}
+
+static async Task<int> RunAuthSetAsync()
+{
+    var configLoader = new ConfigLoader();
+    MoinsearchSettings settings;
+    try
+    {
+        settings = configLoader.LoadSettings();
+    }
+    catch (ConfigurationException ex)
+    {
+        Console.Error.WriteLine($"設定エラー: {ex.Message}");
+        return ExitCode.UsageOrConfigurationError;
+    }
+
+    string password;
+    try
+    {
+        password = PasswordPrompt.Read();
+    }
+    catch (InvalidOperationException ex)
+    {
+        Console.Error.WriteLine(ex.Message);
+        return ExitCode.UsageOrConfigurationError;
+    }
+
+    using var userCancellation = new CancellationTokenSource();
+    ConsoleCancelEventHandler cancelHandler = (_, cancelEventArgs) =>
+    {
+        cancelEventArgs.Cancel = true;
+        userCancellation.Cancel();
+    };
+    Console.CancelKeyPress += cancelHandler;
+
+    try
+    {
+        using var httpClientHandler = new HttpClientHandler { AllowAutoRedirect = false };
+        using var httpClient = new HttpClient(httpClientHandler);
+        var xmlRpcClient = new XmlRpcClient(httpClient, settings.XmlRpcEndpoint);
+        var searchClient = new MoinMoinSearchClient(xmlRpcClient);
+
+        await searchClient
+            .ValidateCredentialsAsync(settings.Username, password, userCancellation.Token)
+            .ConfigureAwait(false);
+
+        configLoader.SavePassword(settings, password);
+        Console.WriteLine("認証に成功し、Windows Credential Managerにパスワードを保存しました。");
+        return ExitCode.Success;
+    }
+    catch (OperationCanceledException) when (userCancellation.IsCancellationRequested)
+    {
+        Console.Error.WriteLine("処理はユーザーによってキャンセルされました。");
+        return ExitCode.Cancelled;
+    }
+    catch (AuthenticationFailedException ex)
+    {
+        Console.Error.WriteLine(ex.Message);
+        return ExitCode.AuthenticationFailure;
+    }
+    catch (CommunicationException ex)
+    {
+        Console.Error.WriteLine(ex.Message);
+        return ExitCode.ExecutionError;
+    }
+    catch (CredentialStoreException ex)
+    {
+        Console.Error.WriteLine($"資格情報の保存に失敗しました: {ex.Message}");
+        return ExitCode.UsageOrConfigurationError;
+    }
+    catch (XmlRpcFaultException)
+    {
+        Console.Error.WriteLine("サーバーがエラーを返しました。");
+        return ExitCode.ExecutionError;
+    }
+    finally
+    {
+        Console.CancelKeyPress -= cancelHandler;
+    }
 }

@@ -23,6 +23,14 @@ public class CommandLineParserTests
     }
 
     [Fact]
+    public void Parse_AuthSetCommand_ReturnsAuthSet()
+    {
+        var parsed = CommandLineParser.Parse(["auth", "set"]);
+
+        Assert.Equal(CommandMode.AuthSet, parsed.Mode);
+    }
+
+    [Fact]
     public void Parse_LegacySearchForm_ReturnsError()
     {
         var parsed = CommandLineParser.Parse(["議事録"]);

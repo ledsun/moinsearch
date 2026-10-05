@@ -16,6 +16,25 @@ internal sealed class MoinMoinSearchClient(XmlRpcClient xmlRpcClient)
 {
     private static readonly TimeSpan CleanupTimeout = TimeSpan.FromSeconds(5);
 
+    public async Task ValidateCredentialsAsync(
+        string username,
+        string password,
+        CancellationToken cancellationToken)
+    {
+        string? token = null;
+        try
+        {
+            token = await GetAuthTokenAsync(username, password, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            if (!string.IsNullOrEmpty(token))
+            {
+                await CleanupSessionAsync(token).ConfigureAwait(false);
+            }
+        }
+    }
+
     public async Task<IReadOnlyList<SearchResult>> SearchAsync(
         string username,
         string password,

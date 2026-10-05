@@ -14,6 +14,7 @@ internal sealed class TomlConfigModel
     [JsonPropertyName("username")]
     public string? Username { get; set; }
 
+    // Used only to reject legacy plaintext configuration.
     [JsonPropertyName("password")]
     public string? Password { get; set; }
 }

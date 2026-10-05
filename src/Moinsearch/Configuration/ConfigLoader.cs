@@ -9,9 +9,10 @@ internal sealed class ConfigLoader
 {
     private readonly Func<string?> _readConfigFile;
     private readonly string _configFilePathForMessages;
+    private readonly ICredentialStore _credentialStore;
 
     public ConfigLoader()
-        : this(ReadDefaultConfigFile, DefaultConfigFilePath)
+        : this(ReadDefaultConfigFile, DefaultConfigFilePath, new WindowsCredentialStore())
     {
     }
 
@@ -20,10 +21,12 @@ internal sealed class ConfigLoader
     /// </summary>
     internal ConfigLoader(
         Func<string?> readConfigFile,
-        string configFilePathForMessages)
+        string configFilePathForMessages,
+        ICredentialStore credentialStore)
     {
         _readConfigFile = readConfigFile;
         _configFilePathForMessages = configFilePathForMessages;
+        _credentialStore = credentialStore;
     }
 
     public static string DefaultConfigFilePath =>
@@ -37,15 +40,45 @@ internal sealed class ConfigLoader
 
     public MoinsearchConfig Load()
     {
+        var settings = LoadSettings();
+        string? password;
+        try
+        {
+            password = _credentialStore.Read(settings.Url);
+        }
+        catch (CredentialStoreException ex)
+        {
+            throw new ConfigurationException(ex.Message);
+        }
+
+        if (string.IsNullOrEmpty(password))
+        {
+            throw new ConfigurationException(
+                "Windows Credential Managerにパスワードが登録されていません。'moinsearch auth set' を実行してください。");
+        }
+
+        return new MoinsearchConfig(settings.Url, settings.XmlRpcEndpoint, settings.Username, password);
+    }
+
+    public MoinsearchSettings LoadSettings()
+    {
         var tomlModel = ParseConfigFileIfPresent();
+        if (tomlModel?.Password is not null)
+        {
+            throw new ConfigurationException(
+                $"設定ファイル ({_configFilePathForMessages}) に平文の 'password' が残っています。削除してください。");
+        }
 
         var url = ResolveField(tomlModel?.Url, "url");
         var username = ResolveField(tomlModel?.Username, "username");
-        var password = ResolveField(tomlModel?.Password, "password");
-
         var (baseUri, endpoint) = ValidateAndBuildUrl(url);
 
-        return new MoinsearchConfig(baseUri, endpoint, username, password);
+        return new MoinsearchSettings(baseUri, endpoint, username);
+    }
+
+    public void SavePassword(MoinsearchSettings settings, string password)
+    {
+        _credentialStore.Write(settings.Url, password);
     }
 
     private TomlConfigModel? ParseConfigFileIfPresent()

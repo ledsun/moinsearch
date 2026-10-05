@@ -45,14 +45,20 @@ Windowsでは `%USERPROFILE%\.moinsearch.toml`です。
 ```toml
 url = "https://wiki.example.com/"
 username = "YourWikiName"
-password = "your-password"
 ```
 
 | 項目 | 説明 | 必須 |
 | --- | --- | --- |
 | `url` | Wiki のベースURL<br>HTTPS必須<br>ユーザー名・パスワードの埋め込み、クエリ文字列、フラグメント (`#...`) を含めない | はい |
 | `username` | WikiName | はい |
-| `password` | パスワード<br>平文で保存 | はい |
+
+パスワードは設定ファイルに書かず、Windows Credential Managerに保存します。初回登録や変更時は次を実行し、プロンプトにパスワードを入力してください。Wikiへの認証に成功した場合だけ保存されます。
+
+```powershell
+moinsearch auth set
+```
+
+既存の設定ファイルに `password` がある場合は、その行を削除してから `auth set` を実行してください。Credential ManagerにはWikiのURLごとに保存されます。
 
 ## 終了コード
 

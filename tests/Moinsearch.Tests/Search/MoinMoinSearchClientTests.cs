@@ -158,6 +158,35 @@ public class MoinMoinSearchClientTests
     }
 
     [Fact]
+    public async Task ValidateCredentialsAsync_SuccessfulAuthentication_DeletesToken()
+    {
+        var handler = FakeHttpMessageHandler.Sequential(
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, TokenResponse),
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, DeleteTokenResponse));
+
+        var client = CreateClient(handler);
+
+        await client.ValidateCredentialsAsync("user", "pass", CancellationToken.None);
+
+        Assert.Equal(2, handler.ReceivedRequestBodies.Count);
+        Assert.Contains("deleteAuthToken", handler.ReceivedRequestBodies[1]);
+    }
+
+    [Fact]
+    public async Task ValidateCredentialsAsync_InvalidCredentials_ThrowsAuthenticationFailedException()
+    {
+        var handler = FakeHttpMessageHandler.Sequential(
+            _ => FakeHttpMessageHandler.XmlResponse(HttpStatusCode.OK, EmptyTokenResponse));
+
+        var client = CreateClient(handler);
+
+        await Assert.ThrowsAsync<AuthenticationFailedException>(
+            () => client.ValidateCredentialsAsync("user", "bad-pass", CancellationToken.None));
+
+        Assert.Single(handler.ReceivedRequestBodies);
+    }
+
+    [Fact]
     public async Task SearchAsync_MulticallAuthFault_ThrowsAuthenticationFailedException_AndNeverReturnsSearchResults()
     {
         var multicall = BuildMulticallResponse(
