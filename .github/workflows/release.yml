@@ -21,8 +21,11 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Restore dependencies
+        run: dotnet restore moinsearch.slnx --locked-mode
+
       - name: Test
-        run: dotnet test moinsearch.slnx --configuration Release
+        run: dotnet test moinsearch.slnx --configuration Release --no-restore
 
       - name: Publish Native AOT executable
         shell: pwsh
@@ -32,7 +35,7 @@ jobs:
             throw "Tag '$tag' must use vMAJOR.MINOR.PATCH format, e.g. v0.0.1."
           }
           $version = $Matches.version
-          dotnet publish src/Moinsearch -c Release -r win-x64 --self-contained -p:PublishAot=true "-p:Version=$version"
+          dotnet publish src/Moinsearch -c Release -r win-x64 --self-contained --no-restore -p:PublishAot=true "-p:Version=$version"
 
       - name: Package release asset
         shell: pwsh
