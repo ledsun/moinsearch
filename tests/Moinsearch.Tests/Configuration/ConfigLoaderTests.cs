@@ -108,9 +108,10 @@ public class ConfigLoaderTests
             username = "user"
             """;
 
-        var ex = Assert.Throws<ConfigurationException>(
+        var ex = Assert.Throws<MissingCredentialsException>(
             () => CreateLoader(toml, new FakeCredentialStore(null)).Load());
 
+        Assert.IsAssignableFrom<ConfigurationException>(ex);
         Assert.Contains("moinsearch auth set", ex.Message);
     }
 

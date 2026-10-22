@@ -52,7 +52,7 @@ username = "YourWikiName"
 | `url` | Wiki のベースURL<br>HTTPS必須<br>ユーザー名・パスワードの埋め込み、クエリ文字列、フラグメント (`#...`) を含めない | はい |
 | `username` | WikiName | はい |
 
-パスワードは設定ファイルに書かず、Windows Credential Managerに保存します。初回登録や変更時は次を実行し、プロンプトにパスワードを入力してください。Wikiへの認証に成功した場合だけ保存されます。
+パスワードは設定ファイルに書かず、Windows Credential Managerに保存します。初回の `search` 実行時にパスワードが未登録であれば入力を求められ、Wikiへの認証に成功した場合だけ保存されます。初回検索前の登録や変更には次を実行してください。
 
 ```powershell
 moinsearch auth set

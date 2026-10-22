@@ -8,7 +8,7 @@ internal static class PasswordPrompt
     {
         if (Console.IsInputRedirected)
         {
-            throw new InvalidOperationException("auth set は対話コンソールから実行してください。");
+            throw new InvalidOperationException("パスワード入力には対話コンソールが必要です。");
         }
 
         Console.Write("Wikiパスワード: ");

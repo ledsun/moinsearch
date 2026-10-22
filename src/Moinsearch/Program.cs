@@ -28,9 +28,28 @@ switch (parsedArguments.Mode)
 }
 
 MoinsearchConfig config;
+var configLoader = new ConfigLoader();
 try
 {
-    config = new ConfigLoader().Load();
+    config = configLoader.Load();
+}
+catch (MissingCredentialsException) when (parsedArguments.Mode == CommandMode.Search)
+{
+    var authSetExitCode = await RunAuthSetAsync(showSuccessMessage: false).ConfigureAwait(false);
+    if (authSetExitCode != ExitCode.Success)
+    {
+        return authSetExitCode;
+    }
+
+    try
+    {
+        config = configLoader.Load();
+    }
+    catch (ConfigurationException ex)
+    {
+        Console.Error.WriteLine($"設定エラー: {ex.Message}");
+        return ExitCode.UsageOrConfigurationError;
+    }
 }
 catch (ConfigurationException ex)
 {
@@ -101,7 +120,7 @@ finally
     Console.CancelKeyPress -= cancelHandler;
 }
 
-static async Task<int> RunAuthSetAsync()
+static async Task<int> RunAuthSetAsync(bool showSuccessMessage = true)
 {
     var configLoader = new ConfigLoader();
     MoinsearchSettings settings;
@@ -146,7 +165,11 @@ static async Task<int> RunAuthSetAsync()
             .ConfigureAwait(false);
 
         configLoader.SavePassword(settings, password);
-        Console.WriteLine("認証に成功し、Windows Credential Managerにパスワードを保存しました。");
+        if (showSuccessMessage)
+        {
+            Console.WriteLine("認証に成功し、Windows Credential Managerにパスワードを保存しました。");
+        }
+
         return ExitCode.Success;
     }
     catch (OperationCanceledException) when (userCancellation.IsCancellationRequested)
