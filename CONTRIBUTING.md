@@ -32,12 +32,13 @@ dotnet publish src/Moinsearch -c Release -r win-x64 --self-contained -p:PublishA
 
 ## GitHub Release
 
-`vMAJOR.MINOR.PATCH` 形式のタグを push すると、GitHub Actions が Windows runner でテストと Native AOT 発行を行い、`moinsearch-<tag>-win-x64.zip`（例: `moinsearch-v0.0.1-win-x64.zip`）を添付した GitHub Release を作成します。ZIPには `moinsearch.exe`、`README.md`、`LICENSE` が含まれます。exeの製品バージョンはタグから設定されます。
+リリースは `main` ブランチで次のコマンドを実行します。作業ツリーがクリーンであることを確認したうえで、指定したバージョンを `.csproj` に設定し、テスト、バージョン更新コミット、`vMAJOR.MINOR.PATCH` タグ作成を行い、コミットとタグを atomic push します。
 
 ```powershell
-git tag v0.0.1
-git push origin v0.0.1
+.\scripts\release.ps1 -Version 0.0.6
 ```
+
+タグの push を契機に、GitHub Actions が Windows runner でテストと Native AOT 発行を行い、`moinsearch-<tag>-win-x64.zip` を添付した GitHub Release を作成します。ZIPには `moinsearch.exe`、`README.md`、`LICENSE` が含まれます。exeの製品バージョンもタグに一致します。GitHub Actions の成否は push 後に確認してください。
 
 ## 動作確認
 

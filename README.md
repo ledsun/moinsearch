@@ -24,6 +24,15 @@ moinsearch get "https://wiki.example.com/議事録2025年度" > page.txt
 
 引数には、検索結果に含まれるWikiのページURLを指定してください。
 
+### バージョン表示
+
+設定ファイルやWikiへの通信なしで、実行ファイルのバージョンを表示します。
+
+```powershell
+moinsearch --version
+# => moinsearch 0.0.5
+```
+
 ## AIエージェント向けスキル
 
 検索結果からのページ選択や、取得したWiki本文の扱いなど、AIエージェント向けの手順は [`.github/skills/moinsearch/SKILL.md`](.github/skills/moinsearch/SKILL.md) を参照してください。CLIの使い方・設定は本READMEを参照します。
@@ -64,7 +73,7 @@ Credential ManagerにはWikiのURLごとに保存されます。
 
 | 終了コード | 意味 |
 | --- | --- |
-| 0 | 成功（0件ヒットを含む）、または `--help` 表示 |
+| 0 | 成功（0件ヒットを含む）、または `--help` / `--version` 表示 |
 | 1 | 通信・サーバー応答・応答解析などの実行エラー |
 | 2 | 引数エラー・設定エラー |
 | 3 | 明確に判別できたWiki認証失敗 |

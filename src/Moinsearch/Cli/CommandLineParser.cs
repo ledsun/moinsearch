@@ -17,6 +17,9 @@ internal enum CommandMode
     /// <summary>使い方を表示して正常終了する。</summary>
     Help,
 
+    /// <summary>バージョンを表示して正常終了する。</summary>
+    Version,
+
     /// <summary>引数エラー。使い方を表示してエラー終了する。</summary>
     Error,
 }
@@ -32,12 +35,17 @@ internal sealed record ParsedArguments(
 
 /// <summary>
 /// moinsearch のコマンドライン引数を解析する。
-/// 対応するコマンドは search / get / auth set で、オプションは --help / -h だけ。
+/// 対応するコマンドは search / get / auth set で、オプションは --help / -h / --version。
 /// </summary>
 internal static class CommandLineParser
 {
     public static ParsedArguments Parse(string[] args)
     {
+        if (args is ["--version"])
+        {
+            return new ParsedArguments(CommandMode.Version);
+        }
+
         if (args.Any(a => a is "--help" or "-h"))
         {
             return new ParsedArguments(CommandMode.Help);

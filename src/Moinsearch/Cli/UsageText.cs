@@ -23,6 +23,7 @@ internal static class UsageText
 
         オプション:
           -h, --help    この使い方を表示して終了します（サーバーへの通信は行いません）
+          --version     バージョンを表示して終了します（サーバーへの通信は行いません）
 
         設定:
           接続先・ユーザー名は ~/.moinsearch.toml で指定します。

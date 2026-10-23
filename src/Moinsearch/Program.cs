@@ -13,6 +13,17 @@ var parsedArguments = CommandLineParser.Parse(args);
 
 switch (parsedArguments.Mode)
 {
+    case CommandMode.Version:
+        var version = typeof(CommandLineParser).Assembly.GetName().Version;
+        if (version is null)
+        {
+            Console.Error.WriteLine("バージョン情報を取得できませんでした。");
+            return ExitCode.ExecutionError;
+        }
+
+        Console.WriteLine($"moinsearch {version.ToString(3)}");
+        return ExitCode.Success;
+
     case CommandMode.Help:
         Console.WriteLine(UsageText.Text);
         return ExitCode.Success;

@@ -45,4 +45,12 @@ public class CommandLineParserTests
 
         Assert.Equal(CommandMode.Help, parsed.Mode);
     }
+
+    [Fact]
+    public void Parse_Version_ReturnsVersion()
+    {
+        var parsed = CommandLineParser.Parse(["--version"]);
+
+        Assert.Equal(CommandMode.Version, parsed.Mode);
+    }
 }
