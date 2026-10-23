@@ -53,7 +53,7 @@ internal sealed class ConfigLoader
 
         if (string.IsNullOrEmpty(password))
         {
-            throw new ConfigurationException(
+            throw new MissingCredentialsException(
                 "Windows Credential Managerにパスワードが登録されていません。'moinsearch auth set' を実行してください。");
         }
 
