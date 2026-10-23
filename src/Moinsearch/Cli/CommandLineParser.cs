@@ -14,6 +14,9 @@ internal enum CommandMode
     /// <summary>パスワードを確認してWindows Credential Managerに登録する。</summary>
     AuthSet,
 
+    /// <summary>GitHub Releasesから最新版を確認して更新する。</summary>
+    SelfUpdate,
+
     /// <summary>使い方を表示して正常終了する。</summary>
     Help,
 
@@ -35,7 +38,7 @@ internal sealed record ParsedArguments(
 
 /// <summary>
 /// moinsearch のコマンドライン引数を解析する。
-/// 対応するコマンドは search / get / auth set で、オプションは --help / -h / --version。
+/// 対応するコマンドは search / get / auth set / self-update で、オプションは --help / -h / --version。
 /// </summary>
 internal static class CommandLineParser
 {
@@ -54,6 +57,11 @@ internal static class CommandLineParser
         if (args.Length == 0)
         {
             return new ParsedArguments(CommandMode.Error, ErrorMessage: "コマンドと引数を指定してください。");
+        }
+
+        if (args is ["self-update"])
+        {
+            return new ParsedArguments(CommandMode.SelfUpdate);
         }
 
         if (args.Length != 2)
@@ -88,6 +96,6 @@ internal static class CommandLineParser
 
         return new ParsedArguments(
             CommandMode.Error,
-            ErrorMessage: "コマンドは search、get、または auth set を指定してください。従来の moinsearch <検索語> 形式は廃止されました。");
+            ErrorMessage: "コマンドは search、get、auth set、または self-update を指定してください。従来の moinsearch <検索語> 形式は廃止されました。");
     }
 }

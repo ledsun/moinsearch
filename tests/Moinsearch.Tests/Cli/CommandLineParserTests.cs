@@ -31,6 +31,14 @@ public class CommandLineParserTests
     }
 
     [Fact]
+    public void Parse_SelfUpdateCommand_ReturnsSelfUpdate()
+    {
+        var parsed = CommandLineParser.Parse(["self-update"]);
+
+        Assert.Equal(CommandMode.SelfUpdate, parsed.Mode);
+    }
+
+    [Fact]
     public void Parse_LegacySearchForm_ReturnsError()
     {
         var parsed = CommandLineParser.Parse(["議事録"]);

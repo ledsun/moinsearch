@@ -9,6 +9,11 @@ using Moinsearch.XmlRpc;
 
 Console.OutputEncoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
+if (SelfUpdater.IsInternalCommand(args))
+{
+    return await SelfUpdater.RunInternalCommandAsync(args).ConfigureAwait(false);
+}
+
 var parsedArguments = CommandLineParser.Parse(args);
 
 switch (parsedArguments.Mode)
@@ -36,6 +41,9 @@ switch (parsedArguments.Mode)
 
     case CommandMode.AuthSet:
         return await RunAuthSetAsync().ConfigureAwait(false);
+
+    case CommandMode.SelfUpdate:
+        return await SelfUpdater.RunAsync().ConfigureAwait(false);
 }
 
 MoinsearchConfig config;

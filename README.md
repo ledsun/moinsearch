@@ -30,8 +30,19 @@ moinsearch get "https://wiki.example.com/議事録2025年度" > page.txt
 
 ```powershell
 moinsearch --version
-# => moinsearch 0.0.5
+# => moinsearch 0.0.6
 ```
+
+### 更新
+
+GitHub Releasesの最新版を確認し、新しいバージョンがあればダウンロードして更新します。
+更新先のフォルダーに書き込み権限が必要です。
+
+```powershell
+moinsearch self-update
+```
+
+最新版の場合は「最新です」と表示して終了します。更新時は実行中のプロセス終了後に置き換えます。
 
 ## AIエージェント向けスキル
 
