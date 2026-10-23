@@ -73,7 +73,12 @@ public class ConfigLoaderTests
     [Fact]
     public void Load_NoConfigFile_ThrowsConfigurationError()
     {
-        Assert.Throws<ConfigurationException>(() => CreateLoader(tomlContent: null).Load());
+        var ex = Assert.Throws<ConfigurationException>(() => CreateLoader(tomlContent: null).Load());
+
+        Assert.Contains(ConfigPath, ex.Message);
+        Assert.Contains("url と username をご自身の環境に置き換えて作成してください。", ex.Message);
+        Assert.Contains("url = \"https://wiki.example.com/\"", ex.Message);
+        Assert.Contains("username = \"YourWikiName\"", ex.Message);
     }
 
     [Fact]

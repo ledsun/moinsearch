@@ -96,7 +96,12 @@ internal sealed class ConfigLoader
 
         if (content is null)
         {
-            return null;
+            throw new ConfigurationException(
+                $"""
+                設定ファイル ({_configFilePathForMessages}) がありません。url と username をご自身の環境に置き換えて作成してください。
+                url = "https://wiki.example.com/"
+                username = "YourWikiName"
+                """);
         }
 
         try
