@@ -58,7 +58,7 @@ username = "YourWikiName"
 moinsearch auth set
 ```
 
-既存の設定ファイルに `password` がある場合は、その行を削除してから `auth set` を実行してください。Credential ManagerにはWikiのURLごとに保存されます。
+Credential ManagerにはWikiのURLごとに保存されます。
 
 ## 終了コード
 
