@@ -9,7 +9,8 @@ Push-Location $repositoryRoot
 
 try {
     & dotnet package update --file moinsearch.slnx --verbosity minimal
-    if ($LASTEXITCODE -ne 0) {
+    $packageUpdateExitCode = $LASTEXITCODE
+    if ($packageUpdateExitCode -ne 0 -and $packageUpdateExitCode -ne 2) {
         throw "dotnet package update failed with exit code $LASTEXITCODE."
     }
 
