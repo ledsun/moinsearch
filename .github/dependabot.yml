@@ -9,5 +9,7 @@ updates:
     directory: "/" # Location of package manifests
     assignees:
       - "ledsun"
+    # Routine version updates run on Windows; keep security updates enabled.
+    open-pull-requests-limit: 0
     schedule:
       interval: "weekly"

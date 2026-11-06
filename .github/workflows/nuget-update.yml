@@ -1,0 +1,78 @@
+name: Update NuGet packages
+
+on:
+  schedule:
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Update dependencies and lock files
+        shell: pwsh
+        run: .\scripts\update-nuget.ps1
+
+      - name: Upload updated project and lock files
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-updates
+          path: |
+            src/Moinsearch/Moinsearch.csproj
+            src/Moinsearch/packages.lock.json
+            tests/Moinsearch.Tests/Moinsearch.Tests.csproj
+            tests/Moinsearch.Tests/packages.lock.json
+          if-no-files-found: error
+
+  create-pull-request:
+    needs: update
+    runs-on: windows-latest
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download updated project and lock files
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-updates
+          path: .
+
+      - name: Create or update pull request
+        id: create-pull-request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ github.token }}
+          commit-message: "chore: update NuGet packages"
+          title: "chore: update NuGet packages"
+          body: |
+            Automated NuGet update. Lock files are regenerated on Windows to keep the Native AOT RID graph consistent.
+          branch: automation/nuget-updates
+          delete-branch: true
+          labels: dependencies,.NET
+          assignees: ledsun
+
+      - name: Run CI for the generated pull request
+        if: steps.create-pull-request.outputs.pull-request-operation == 'created' || steps.create-pull-request.outputs.pull-request-operation == 'updated'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: gh workflow run ci.yml --ref automation/nuget-updates
