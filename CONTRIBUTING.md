@@ -2,7 +2,7 @@
 
 ## 前提条件
 
-- .NET SDK: `global.json` で固定しているバージョン（本リポジトリでは `10.0.401`、.NET 10 / C# 14 系のGA版。Preview・RC版は使用していません）。
+- .NET SDK: `global.json` で固定しているバージョン（本リポジトリでは `11.0.100`、.NET 11 系。Preview・RC版は使用していません）。
 - Windows 向け Native AOT ビルドを行うために 「C++によるデスクトップ開発」ワークロード（Visual Studio Build Tools に含まれる MSVC ツールチェーンとWindows SDK）が必要です。
 
 
@@ -28,7 +28,7 @@ dotnet publish src/Moinsearch -c Release -r win-x64 --self-contained -p:PublishA
 ```
 
 
-生成された `moinsearch.exe` は `src/Moinsearch/bin/Release/net10.0/win-x64/publish/` 配下に出力されます。
+生成された `moinsearch.exe` は `src/Moinsearch/bin/Release/net11.0/win-x64/publish/` 配下に出力されます。
 
 ## GitHub Release
 
